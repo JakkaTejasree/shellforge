@@ -1,56 +1,59 @@
-#include <stdio.h>
-#include <stdlib.h>
+#include <stdio.h> 
+#include <stdlib.h> 
 #include <string.h>
 #include <readline/history.h>
 #include <readline/readline.h>
-#include "history.h"
-
+#include "token.h"
+#include "lexer.h"
+#include "parser.h"
+#include "expand.h"
 int main(void)
 {
-	// Display a welcome banner when the shell starts
-	printf("======================================\n");
-	printf("      Shellforge      \n");
-	printf(" A Unix Style Shell written in C\n");
-	printf("======================================\n");
+    // Display a welcome banner when the shell starts
+    printf("=====================================\n");
+    printf("      Shellforge \n");
+    printf(" A Unix Style Shell written in C\n");
+    printf("=====================================\n");
 
-// Initializing History
-using_history();
+  token_list_t tokens;
+ pipeline_t pipeline;
+ 
+ char *line;
 
- char*line;
+    while (1)
+    {
+        line = readline("shellforge$ ");
+        if (line == NULL)
+        {
+            printf("\nGoodbye!\n");
+            break;
+        }
+        if (strlen(line) == 0)
+        {
+            free(line);
+            continue;
+        }
 
-	while(1)
+         add_history(line);
+	lexer(line, &tokens);
+        token_print(&tokens);
+        
+
+	if(parser(&tokens, &pipeline))
 	{
-		line = readline("shellforge$ ");
-		if(line == NULL)
-		{
-			printf("\nGoodbye!\n");
-			break;
-		}
-
-		if(strlen(line) == 0)
-		{
-			free(line);
-			continue;
-		}
-
-		if(strcmp(line, "history") == 0){
-		print_history();
-		free(line);
-		continue;
-		}
-
-//adding the input line to history
-
-	add_history(line);
-	printf(" YOU ENTERED : %s\n", line);
-
-	if(strcmp(line, "exit") == 0)
-	{
-		free(line);
-		printf("Exiting...\n");
-		break;
+		expand_variables(&pipeline);
+    		pipeline_print(&pipeline);
 	}
+        
+
+
+        if (strcmp(line, "exit") == 0)
+        {
+            free(line);
+            printf("Exiting...\n");
+            break;
+        }
 	free(line);
-}
-	return 0;
+    }    
+    return 0;
 }
